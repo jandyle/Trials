@@ -27,6 +27,7 @@ public class FileModificationMonitor extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.file_modification_monitor);
+
         btn1 = (Button) findViewById(R.id.file_modification_monitor_btn_first);
         btn2 = (Button) findViewById(R.id.file_modification_monitor_btn_second);
         btn3 = (Button) findViewById(R.id.file_modification_monitor_btn_third);
@@ -35,7 +36,7 @@ public class FileModificationMonitor extends Activity {
         int screenWidth = this.getWindowManager().getDefaultDisplay().getWidth();
         btn1.setWidth(screenWidth/5);
         text1 = (TextView) findViewById(R.id.file_modification_monitor_log);
-        //stop_capture = false;
+
         if (!started) {
         	startService(new Intent(FileModificationMonitor.this.getApplicationContext(), FileModService.class));
 			btn1.setEnabled(false);
@@ -118,7 +119,7 @@ public class FileModificationMonitor extends Activity {
 			File newFile = new File(s);
 			try {
 			FileUtils.copyFileToDirectory(new File(s), new File(trustePath+newFile.getParent()));
-				System.out.println(s + trustePath);
+				//System.out.println(s + trustePath);
 			} catch (Exception e){
 			e.printStackTrace();
 			}

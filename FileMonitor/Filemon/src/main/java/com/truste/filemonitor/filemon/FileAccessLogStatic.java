@@ -6,5 +6,4 @@ public class FileAccessLogStatic {
 	public static String accessLogMsg = "";
 	public static CopyOnWriteArrayList<String> accessPaths = new CopyOnWriteArrayList<String>();
 
-
 }
