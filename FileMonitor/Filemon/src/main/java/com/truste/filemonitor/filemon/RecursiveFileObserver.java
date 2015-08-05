@@ -24,7 +24,6 @@ public class RecursiveFileObserver extends FileObserver {
         public RecursiveFileObserver(String path){
         super(path, FileObserver.ALL_EVENTS);
             absolutePath = path;
-            //crawlDirAndAddOb(absolutePath);
     }
 
         @Override
@@ -35,9 +34,10 @@ public class RecursiveFileObserver extends FileObserver {
 
             //a new file or subdirectory was created under the monitored directory
             if ((FileObserver.CREATE & event)!=0) {
-                getMessage(path,"is created");
+                getMessage(path, "is created");
                 FileAccessLogStatic.accessPaths.add(path);
-                crawlDirAndAddOb(path);
+                RecursiveFileObserver fileOb = new RecursiveFileObserver(path);
+                fileOb.startWatching();
             }
 
             if ((FileObserver.MODIFY & event)!=0) {
@@ -76,21 +76,8 @@ public class RecursiveFileObserver extends FileObserver {
                 getMessage(path,"is changed");
                 FileAccessLogStatic.accessPaths.add(path);
             }
-
         }
 
-    public String getProcessName(){
-        ActivityManager manager = (ActivityManager) CurrentProcess.getContext().getSystemService(CurrentProcess.getContext().ACTIVITY_SERVICE);
-        List<RunningAppProcessInfo> runningProcesses = manager.getRunningAppProcesses();
-
-        for(RunningAppProcessInfo a: runningProcesses) {
-            if((a.processName.contains("com.android.")||a.processName.contains("com.google.")||a.processName.contains("system")||a.processName.contains("android.process.")) == false)
-               return a.processName;
-            // allProcess.add(a.processName);
-            break;
-        }
-        return "Not found";
-    }
 
     public void getAllProcess(String path){
         ActivityManager manager = (ActivityManager) CurrentProcess.getContext().getSystemService(CurrentProcess.getContext().ACTIVITY_SERVICE);
@@ -101,7 +88,6 @@ public class RecursiveFileObserver extends FileObserver {
           //  FileAccessLogStatic.accessLogMsg += a.processName +":    "+path+"\n";
             FileAccessLogStatic.accessLogMsg += a.processName+"\n";
         }
-
     }
 
     public void getMessage(String path, String message){
@@ -114,8 +100,6 @@ public class RecursiveFileObserver extends FileObserver {
                 break;
             }
         }
-
-
     }
 
     @Override
@@ -133,6 +117,7 @@ public class RecursiveFileObserver extends FileObserver {
             if(parent.equals("/sdcard/TrusteFiles")==false)
             mObservers.add(new SingleFileObserver(parent));
             File path = new File(parent);
+            path.setWritable(true);
             File[] files = path.listFiles();
             if (null == files)
                 continue;
@@ -141,46 +126,14 @@ public class RecursiveFileObserver extends FileObserver {
                         .equals("..")) {
                     stack.push(f.getPath());
                 }
-                //System.out.println(f.getPath()+"is watched");
+                System.out.println(f.getPath() + " is watched");
             }
         }
-
         for (SingleFileObserver sfo : mObservers) {
             sfo.startWatching();
         }
     }
 
-    public void crawlDirAndAddOb(String path){
-        ArrayList<SingleFileObserver> nObservers;
-        nObservers = new ArrayList();
-        if (nObservers != null)
-            return;
-        Stack stack = new Stack();
-        stack.push(path);
-
-        while (!stack.isEmpty()) {
-            String parent = String.valueOf(stack.pop());
-          //  System.out.println(parent);
-            if(parent.equals("/sdcard/TrusteFiles")==false)
-                mObservers.add(new SingleFileObserver(parent));
-            File mpath = new File(parent);
-            File[] files = mpath.listFiles();
-            if (null == files)
-                continue;
-            for (File f : files) {
-                if (f.isDirectory() && !f.getName().equals(".") && !f.getName()
-                        .equals("..")) {
-                    stack.push(f.getPath());
-
-                }
-               System.out.println(f.getPath()+"is watched");
-            }
-        }
-
-        for (SingleFileObserver sfo : mObservers) {
-            sfo.startWatching();
-        }
-    }
 
     class SingleFileObserver extends FileObserver {
         String mPath;
