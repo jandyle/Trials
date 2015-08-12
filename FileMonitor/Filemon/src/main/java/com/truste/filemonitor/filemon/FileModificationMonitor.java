@@ -9,7 +9,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import org.apache.commons.io.FileUtils;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.lang.reflect.Method;
 
 //use asynctask background thread to detect file modification and then update the UI once there is 
 //a new change detected
@@ -38,7 +40,37 @@ public class FileModificationMonitor extends Activity {
         text1 = (TextView) findViewById(R.id.file_modification_monitor_log);
 
         if (!started) {
-        	startService(new Intent(FileModificationMonitor.this.getApplicationContext(), FileModService.class));
+//			Runtime.getRuntime().exec("find /data/data -type d -exec chmod 755 {} +");
+			//Runtime.getRuntime().exec("find /data/data -type f -exec chmod 755 {} +");
+			try {
+
+				Process process2 = null;
+				DataOutputStream dataOutputStream = null;
+
+				try {
+					process2 = Runtime.getRuntime().exec("su");
+					dataOutputStream = new DataOutputStream(process2.getOutputStream());
+					dataOutputStream.writeBytes("chmod -R 777 /data/data \n");
+					dataOutputStream.writeBytes("exit\n");
+					dataOutputStream.flush();
+					process2.waitFor();
+				} catch (Exception e) {
+					e.printStackTrace();
+				} finally {
+					try {
+						if (dataOutputStream != null) {
+							dataOutputStream.close();
+						}
+						process2.destroy();
+					} catch (Exception e) {
+					}
+				}
+
+
+				startService(new Intent(FileModificationMonitor.this.getApplicationContext(), FileModService.class));
+			} catch(Exception e){
+				e.printStackTrace();
+			}
 			btn1.setEnabled(false);
 			started = true;
         }
@@ -126,4 +158,12 @@ public class FileModificationMonitor extends Activity {
 		}
 
 	}
+
+	public int chmod(File path, int mode) throws Exception {
+		Class fileUtils = Class.forName("android.os.FileUtils");
+		Method setPermissions =
+				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+		return (Integer) setPermissions.invoke(null, path.getAbsolutePath(), mode, -1, -1);
+	}
+
 }

@@ -4,7 +4,9 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.os.FileObserver;
 
+import java.io.DataOutputStream;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -28,16 +30,44 @@ public class RecursiveFileObserver extends FileObserver {
 
         @Override
         public void onEvent ( int event, String path){
-            if (path == null) {
+            if (path == null||((path.contains("com.noshufou.android.su")) == true)) {
                 return;
             }
 
             //a new file or subdirectory was created under the monitored directory
             if ((FileObserver.CREATE & event)!=0) {
-                getMessage(path, "is created");
+                getMessage(path, "is created");try{
+                //chmod(new File(path), 777);
+
+                    Process process = null;
+                    DataOutputStream dataOutputStream = null;
+
+                    try {
+                        process = Runtime.getRuntime().exec("su");
+                        dataOutputStream = new DataOutputStream(process.getOutputStream());
+                        dataOutputStream.writeBytes("chmod 777 " + path + "\n");
+                        dataOutputStream.writeBytes("exit\n");
+                        dataOutputStream.flush();
+                        process.waitFor();
+                    } catch (Exception e) {
+                       e.printStackTrace();
+                    } finally {
+                        try {
+                            if (dataOutputStream != null) {
+                                dataOutputStream.close();
+                            }
+                            process.destroy();
+                        } catch (Exception e) {
+                        }
+                    }
+
+
                 FileAccessLogStatic.accessPaths.add(path);
-                RecursiveFileObserver fileOb = new RecursiveFileObserver(path);
-                fileOb.startWatching();
+                RecursiveFileObserver fileObNew = new RecursiveFileObserver(path);
+                fileObNew.startWatching();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
 
             if ((FileObserver.MODIFY & event)!=0) {
@@ -95,7 +125,7 @@ public class RecursiveFileObserver extends FileObserver {
         List<RunningAppProcessInfo> runningProcesses = manager.getRunningAppProcesses();
 
         for(RunningAppProcessInfo a: runningProcesses) {
-            if((a.processName.contains("com.android.")||a.processName.contains("com.google.")||a.processName.contains("system")||a.processName.contains("android.process.")) == false) {
+            if((a.processName.contains("com.noshufou.android.su")||a.processName.contains("com.android.")||a.processName.contains("com.google.")||a.processName.contains("system")||a.processName.contains("android.process.")) == false) {
                 FileAccessLogStatic.accessLogMsg += a.processName + ": " + path + " " + message + "\n";
                 break;
             }
@@ -155,6 +185,14 @@ public class RecursiveFileObserver extends FileObserver {
         }
     }
 
+
+    public int chmod(File path, int mode) throws Exception {
+        System.out.println("changed perm in " + path.getAbsolutePath());
+        Class fileUtils = Class.forName("android.os.FileUtils");
+        Method setPermissions =
+                fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+        return (Integer) setPermissions.invoke(null, path.getAbsolutePath(), mode, -1, -1);
+    }
 }
 
 

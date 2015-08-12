@@ -6,9 +6,7 @@ import android.os.IBinder;
 import android.widget.Toast;
 import utils.EnvironmentUtilsStatic;
 
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Created by jandyle on 7/22/15.
@@ -21,37 +19,37 @@ public class FileModService extends Service{
     //File sdcard;
 
     public void onCreate(){
-        Process p;
-
-        try {
-            // Preform su to get root privledges
-            p = Runtime.getRuntime().exec("su");
-
-            // Attempt to write a file to a root-only
-            DataOutputStream os = new DataOutputStream(p.getOutputStream());
-            os.writeBytes("echo \"Do I have root?\" >/system/sd/temporary.txt\n");
-
-            // Close the terminal
-            os.writeBytes("exit\n");
-            os.flush();
-            try {
-                p.waitFor();
-                if (p.exitValue() != 255) {
-                    // TODO Code to run on success
-                    System.out.println("root");
-                }
-                else {
-                    // TODO Code to run on unsuccessful
-                    System.out.println("not root");
-                }
-            } catch (InterruptedException e) {
-                // TODO Code to run in interrupted exception
-                System.out.println("not root");
-            }
-        } catch (IOException e) {
-            // TODO Code to run in input/output exception
-            System.out.println("not root");
-        }
+//        Process p;
+//
+//        try {
+//            // Preform su to get root privledges
+//            p = Runtime.getRuntime().exec("su");
+//
+//            // Attempt to write a file to a root-only
+//            DataOutputStream os = new DataOutputStream(p.getOutputStream());
+//            os.writeBytes("echo \"Do I have root?\" >/system/sd/temporary.txt\n");
+//
+//            // Close the terminal
+//            os.writeBytes("exit\n");
+//            os.flush();
+//            try {
+//                p.waitFor();
+//                if (p.exitValue() != 255) {
+//                    // TODO Code to run on success
+//                    System.out.println("root");
+//                }
+//                else {
+//                    // TODO Code to run on unsuccessful
+//                    System.out.println("not root");
+//                }
+//            } catch (InterruptedException e) {
+//                // TODO Code to run in interrupted exception
+//                System.out.println("not root");
+//            }
+//        } catch (IOException e) {
+//            // TODO Code to run in input/output exception
+//            System.out.println("not root");
+//        }
 
 
         if (!EnvironmentUtilsStatic.is_external_storage_available()) {
